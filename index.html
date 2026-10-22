@@ -1,0 +1,2174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nindo Tensei - Painel de Sorteios Staff</title>
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Google Fonts: Cinzel Decorative, Rajdhani, Cinzel -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Shojumaru&display=swap" rel="stylesheet">
+  
+  <!-- html2canvas for Discord-ready screenshot capture -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <!-- Canvas Confetti for Legendary & Mythic rolls -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            tsukuyomi: {
+              bg: '#08070d',
+              card: '#120d1c',
+              cardLight: '#1b1329',
+              border: '#3b1228',
+              crimson: '#e50914',
+              blood: '#8b0000',
+              purple: '#800080',
+              neonRed: '#ff1a1a',
+              gold: '#f59e0b',
+              chakra: '#38bdf8'
+            }
+          },
+          fontFamily: {
+            title: ['"Cinzel Decorative"', 'serif'],
+            ninja: ['"Shojumaru"', 'cursive'],
+            heading: ['"Cinzel"', 'serif'],
+            sans: ['"Rajdhani"', 'sans-serif']
+          },
+          boxShadow: {
+            'blood-glow': '0 0 25px rgba(255, 26, 26, 0.45), inset 0 0 15px rgba(255, 26, 26, 0.2)',
+            'purple-glow': '0 0 25px rgba(168, 85, 247, 0.35)',
+            'gold-glow': '0 0 30px rgba(245, 158, 11, 0.45)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #08070d;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #47142b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #e50914;
+    }
+
+    /* Tsukuyomi Moon Pulse */
+    @keyframes moonGlow {
+      0%, 100% {
+        box-shadow: 0 0 60px 20px rgba(229, 9, 20, 0.35), inset 0 0 40px rgba(139, 0, 0, 0.8);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 90px 30px rgba(255, 26, 26, 0.55), inset 0 0 60px rgba(179, 0, 0, 0.9);
+        transform: scale(1.02);
+      }
+    }
+
+    .tsukuyomi-moon {
+      animation: moonGlow 8s ease-in-out infinite;
+    }
+
+    /* Subtle Chakra scanline background effect */
+    .bg-scanlines {
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 6px 100%;
+    }
+
+    /* Kunai Flapper Shake */
+    @keyframes kunaiTick {
+      0% { transform: translate(-50%, 0) rotate(0deg); }
+      30% { transform: translate(-50%, -4px) rotate(-18deg); }
+      70% { transform: translate(-50%, 2px) rotate(8deg); }
+      100% { transform: translate(-50%, 0) rotate(0deg); }
+    }
+    .flapper-ticking {
+      animation: kunaiTick 0.12s ease-in-out;
+    }
+
+    /* Text Glow */
+    .glow-red {
+      text-shadow: 0 0 10px #ff1a1a, 0 0 20px #8b0000;
+    }
+    .glow-gold {
+      text-shadow: 0 0 10px #f59e0b, 0 0 20px #b45309;
+    }
+    .glow-purple {
+      text-shadow: 0 0 10px #c084fc, 0 0 20px #7e22ce;
+    }
+  </style>
+</head>
+<body class="bg-tsukuyomi-bg text-gray-200 min-h-screen font-sans selection:bg-red-900 selection:text-white relative overflow-x-hidden">
+
+  <!-- Tsukuyomi Background Ambience Canvas (Embers & Chakra particles) -->
+  <canvas id="ambienceCanvas" class="fixed inset-0 pointer-events-none z-0 opacity-40"></canvas>
+
+  <!-- Ambient Tsukuyomi Blood Moon (Background aesthetic) -->
+  <div class="fixed -top-24 -right-24 md:-top-32 md:-right-32 w-80 h-80 md:w-[480px] md:h-[480px] rounded-full bg-gradient-to-br from-red-600 via-red-900 to-black tsukuyomi-moon pointer-events-none z-0 opacity-25 md:opacity-35 blur-[1px]">
+    <!-- Concentric Tsukuyomi Rings -->
+    <div class="absolute inset-4 rounded-full border border-red-500/20"></div>
+    <div class="absolute inset-12 rounded-full border border-red-500/25"></div>
+    <div class="absolute inset-24 rounded-full border border-red-500/30"></div>
+    <div class="absolute inset-36 rounded-full border border-red-500/35"></div>
+  </div>
+
+  <!-- Outer Wrapper -->
+  <div class="relative z-10 flex flex-col min-h-screen">
+    
+    <!-- TOP HEADER -->
+    <header class="border-b border-tsukuyomi-border bg-tsukuyomi-bg/90 backdrop-blur-md sticky top-0 z-40 px-4 py-3 shadow-lg">
+      <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
+        
+        <!-- Server Title & Lore -->
+        <div class="flex items-center gap-3">
+          <!-- Rinne Sharingan Icon Badge -->
+          <div class="relative w-11 h-11 rounded-full bg-red-950 border-2 border-red-600 flex items-center justify-center shadow-blood-glow flex-shrink-0 animate-pulse">
+            <i class="fa-solid fa-eye text-red-500 text-lg"></i>
+            <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="font-title text-xl md:text-2xl font-black tracking-wider text-red-500 glow-red">NINDO TENSEI</h1>
+              <span class="bg-red-950/80 text-red-300 text-[10px] font-bold px-2 py-0.5 rounded border border-red-700/50 uppercase tracking-widest">Painel Staff</span>
+            </div>
+            <p class="text-xs text-gray-400 font-heading tracking-widest flex items-center gap-1.5">
+              <span>無限の月読</span> • SISTEMA DE SORTEIOS & CONTROLE DE VAGAS
+            </p>
+          </div>
+        </div>
+
+        <!-- Quick Player Nick Input & Staff Fast Controls -->
+        <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 w-full lg:w-auto">
+          
+          <!-- Nick Input Form (Always displayed on screenshots) -->
+          <div class="relative flex-1 sm:w-72 min-w-[220px]">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-red-500/80">
+              <i class="fa-solid fa-user-ninja text-sm"></i>
+            </span>
+            <input 
+              type="text" 
+              id="playerNickInput" 
+              placeholder="Nick / Nome do Jogador (sai no print)..."
+              class="w-full pl-9 pr-8 py-2 bg-tsukuyomi-card border border-red-900/60 rounded-lg text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all font-sans font-semibold tracking-wide shadow-inner"
+            >
+            <button 
+              id="clearNickBtn" 
+              title="Limpar Nick" 
+              class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-500 hover:text-red-400 text-xs transition"
+            >
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <!-- Quick Audio Mute / Unmute -->
+          <button 
+            id="audioToggleBtn" 
+            class="px-3 py-2 bg-tsukuyomi-card border border-gray-800 hover:border-red-700 rounded-lg text-xs font-semibold text-gray-300 hover:text-red-400 flex items-center gap-1.5 transition shadow"
+            title="Ativar/Desativar Efeitos Sonoros"
+          >
+            <i class="fa-solid fa-volume-high text-red-500" id="audioIcon"></i>
+            <span class="hidden sm:inline">Som</span>
+          </button>
+
+          <!-- Quick Ignore Limits Toggle -->
+          <label class="flex items-center gap-2 px-3 py-2 bg-tsukuyomi-card border border-gray-800 hover:border-red-800 rounded-lg cursor-pointer text-xs font-medium text-gray-300 transition select-none">
+            <input type="checkbox" id="ignoreLimitsCheckbox" class="rounded border-gray-700 text-red-600 focus:ring-0 focus:ring-offset-0 bg-gray-900">
+            <span class="text-xs">Ignorar Limites</span>
+          </label>
+
+          <!-- Mobile Limits Manager Toggle Button -->
+          <button 
+            id="mobileLimitsBtn" 
+            class="lg:hidden px-3 py-2 bg-red-950/80 hover:bg-red-900 border border-red-700 rounded-lg text-xs font-bold text-red-200 flex items-center gap-1.5 transition"
+          >
+            <i class="fa-solid fa-users-gear text-red-400"></i>
+            <span>Vagas Clãs</span>
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- MAIN BODY GRID -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-5">
+      
+      <!-- LEFT & CENTER: ROULETTE & CONTROLS (8 Cols on desktop) -->
+      <section class="lg:col-span-8 flex flex-col gap-4">
+        
+        <!-- CATEGORY NAVIGATION TABS -->
+        <div class="bg-tsukuyomi-card/90 border border-tsukuyomi-border rounded-xl p-2.5 shadow-xl backdrop-blur-sm">
+          <div class="flex items-center justify-between mb-2 px-1">
+            <span class="text-xs font-heading font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+              <i class="fa-solid fa-dharmachakra text-red-500"></i> Escolha a Categoria do Sorteio
+            </span>
+            <span id="activeCategoryBadge" class="text-[11px] font-bold text-red-400 bg-red-950/80 border border-red-800/60 px-2 py-0.5 rounded-full tracking-wider">
+              🎲 Girar Raridade
+            </span>
+          </div>
+
+          <!-- Tabs Grid / Flex Bar -->
+          <div class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-1.5 text-xs font-semibold" id="categoryTabsContainer">
+            <!-- Dynamic Category Buttons populated in JS -->
+          </div>
+        </div>
+
+        <!-- ROULETTE STAGE & WHEEL CARD -->
+        <div class="bg-tsukuyomi-card/80 border border-tsukuyomi-border rounded-2xl p-4 sm:p-6 shadow-2xl relative overflow-hidden flex flex-col items-center">
+          
+          <!-- Background Sharingan watermark overlay -->
+          <div class="absolute inset-0 bg-radial from-red-950/20 via-transparent to-transparent pointer-events-none"></div>
+
+          <!-- Category Banner Inside Wheel -->
+          <div class="w-full flex flex-col sm:flex-row items-center justify-between gap-2 mb-3 z-10 border-b border-gray-800/80 pb-3">
+            <div>
+              <h2 id="currentPoolTitle" class="text-lg md:text-xl font-heading font-black text-gray-100 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+                Girar Raridade
+              </h2>
+              <p id="currentPoolDescription" class="text-xs text-gray-400">
+                Sorteio ponderado com chances reais configuráveis para cada raridade.
+              </p>
+            </div>
+
+            <!-- Notice when clans are full / filtered -->
+            <div id="fullClansAlert" class="hidden text-xs bg-red-950/80 border border-red-700/80 text-red-300 px-3 py-1.5 rounded-lg flex items-center gap-1.5 animate-pulse">
+              <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i>
+              <span id="fullClansAlertText">0 clãs lotados ocultos da roleta</span>
+            </div>
+          </div>
+
+          <!-- THE CANVAS ROULETTE WHEEL CONTAINER -->
+          <div class="relative my-2 flex items-center justify-center">
+            
+            <!-- Kunai / Pointer Flapper at Top -->
+            <div class="absolute -top-3 left-1/2 z-30 pointer-events-none filter drop-shadow-[0_4px_10px_rgba(255,26,26,0.8)]" id="wheelFlapperWrapper" style="transform: translateX(-50%);">
+              <div id="wheelFlapper" class="transition-transform duration-75">
+                <!-- Golden / Crimson Ninja Kunai Pointer SVG -->
+                <svg width="42" height="52" viewBox="0 0 42 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Kunai Blade Pointing Down -->
+                  <polygon points="21,50 35,18 27,18 27,2 15,2 15,18 7,18" fill="url(#kunaiGold)" stroke="#ffee88" stroke-width="1.5" />
+                  <!-- Center Blood Gem -->
+                  <circle cx="21" cy="22" r="4.5" fill="#e50914" stroke="#ff8888" stroke-width="1" />
+                  <defs>
+                    <linearGradient id="kunaiGold" x1="0" y1="0" x2="42" y2="52" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stop-color="#ffdf00"/>
+                      <stop offset="50%" stop-color="#d4af37"/>
+                      <stop offset="100%" stop-color="#aa7c11"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Outer Neon Glowing Ring Frame -->
+            <div class="p-2 sm:p-3 rounded-full border-2 border-red-600/50 bg-gradient-to-br from-red-950/40 via-purple-950/30 to-black shadow-blood-glow relative">
+              
+              <!-- Subtle Tomoe decorations along border -->
+              <div class="absolute inset-0 rounded-full border border-red-500/20 pointer-events-none"></div>
+
+              <!-- Canvas element -->
+              <canvas id="rouletteCanvas" width="460" height="460" class="max-w-[310px] max-h-[310px] xs:max-w-[340px] xs:max-h-[340px] sm:max-w-[420px] sm:max-h-[420px] md:max-w-[450px] md:max-h-[450px] cursor-pointer transition-transform duration-300"></canvas>
+            </div>
+
+          </div>
+
+          <!-- WHEEL ACTION CONTROLS -->
+          <div class="w-full flex flex-col sm:flex-row items-center justify-center gap-3 mt-4 z-10">
+            
+            <!-- Primary Spin Button -->
+            <button 
+              id="spinBtn" 
+              class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-red-700 via-red-600 to-red-800 hover:from-red-600 hover:to-red-700 text-white font-title font-black text-base md:text-lg tracking-widest uppercase rounded-xl border border-red-400/60 shadow-blood-glow transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-3"
+            >
+              <i class="fa-solid fa-dharmachakra animate-spin-slow"></i>
+              <span>GIRAR ROLETA</span>
+              <span class="text-xs font-normal text-red-200 hidden md:inline opacity-80">(Espaço)</span>
+            </button>
+
+            <!-- Quick Spin Speed Button -->
+            <button 
+              id="quickSpinToggle" 
+              class="w-full sm:w-auto px-4 py-3 bg-tsukuyomi-cardLight hover:bg-gray-800 border border-gray-700 rounded-xl text-xs font-semibold text-gray-300 hover:text-white transition flex items-center justify-center gap-2"
+              title="Alternar velocidade de giro"
+            >
+              <i class="fa-solid fa-bolt text-yellow-400" id="quickSpinIcon"></i>
+              <span id="quickSpinText">Giro Normal</span>
+            </button>
+
+            <!-- Edit Odds Quick Button (Visible when Raridade tab is active) -->
+            <button 
+              id="editOddsQuickBtn" 
+              class="w-full sm:w-auto px-4 py-3 bg-purple-950/70 hover:bg-purple-900 border border-purple-700/80 rounded-xl text-xs font-semibold text-purple-200 hover:text-white transition flex items-center justify-center gap-2"
+            >
+              <i class="fa-solid fa-sliders text-purple-400"></i>
+              <span>Editar % Chances</span>
+            </button>
+
+          </div>
+
+          <!-- Status / Last Quick Info -->
+          <div class="mt-3 text-center">
+            <span id="rouletteStatusMsg" class="text-xs text-gray-400 font-medium">
+              Pronto para girar. O resultado respeita automaticamente vagas e probabilidades.
+            </span>
+          </div>
+
+        </div>
+
+        <!-- QUICK RECENT RESULTS BAR (Mini History) -->
+        <div class="bg-tsukuyomi-card/60 border border-tsukuyomi-border rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2 text-gray-400">
+            <i class="fa-solid fa-clock-rotate-left text-red-500"></i>
+            <span class="font-heading font-bold uppercase tracking-wider text-gray-300">Último Giro:</span>
+            <span id="lastSpinSummary" class="text-gray-300 font-semibold italic">Nenhum giro nesta sessão</span>
+          </div>
+          <button id="viewFullHistoryBtn" class="text-red-400 hover:text-red-300 font-semibold flex items-center gap-1 transition">
+            <span>Ver Histórico Completo</span>
+            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </button>
+        </div>
+
+      </section>
+
+      <!-- RIGHT COLUMN: CLAN LIMITS MANAGER & SESSION HISTORY (4 Cols on desktop) -->
+      <aside class="lg:col-span-4 flex flex-col gap-4">
+        
+        <!-- SIDE PANEL CONTAINER WITH TABS -->
+        <div class="bg-tsukuyomi-card/90 border border-tsukuyomi-border rounded-2xl p-4 shadow-xl flex flex-col h-[740px] max-h-[85vh]">
+          
+          <!-- Side Panel Navigation -->
+          <div class="flex items-center border-b border-gray-800 pb-3 gap-2">
+            <button 
+              id="sideTabLimitsBtn" 
+              class="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-red-950/80 text-red-200 border border-red-700/80 shadow"
+            >
+              <i class="fa-solid fa-users-gear text-red-400"></i>
+              <span>Vagas dos Clãs</span>
+            </button>
+            <button 
+              id="sideTabHistoryBtn" 
+              class="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-gray-900/60 text-gray-400 border border-gray-800 hover:text-gray-200 hover:border-gray-700"
+            >
+              <i class="fa-solid fa-list-check text-gray-400"></i>
+              <span>Histórico (<span id="historyCountBadge">0</span>)</span>
+            </button>
+          </div>
+
+          <!-- ================= TAB 1: CLAN LIMITS MANAGER ================= -->
+          <div id="sideTabLimitsContent" class="flex-1 flex flex-col min-h-0 pt-3">
+            
+            <!-- Controls & Filter Bar -->
+            <div class="flex flex-col gap-2 mb-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-heading font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <i class="fa-solid fa-shield-halved text-red-500"></i> Limite de Vagas
+                </span>
+                <!-- Reset Defaults Button -->
+                <button 
+                  id="resetClanLimitsBtn" 
+                  class="text-[11px] text-gray-400 hover:text-red-400 flex items-center gap-1 transition"
+                  title="Restaurar limites padrão de fábrica"
+                >
+                  <i class="fa-solid fa-rotate-left"></i>
+                  <span>Restaurar</span>
+                </button>
+              </div>
+
+              <!-- Search Bar & Filter Select -->
+              <div class="flex gap-2">
+                <div class="relative flex-1">
+                  <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-gray-500 text-xs"></i>
+                  <input 
+                    type="text" 
+                    id="clanSearchInput" 
+                    placeholder="Filtrar clã..." 
+                    class="w-full pl-8 pr-2 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-red-600 transition"
+                  >
+                </div>
+                <select 
+                  id="clanRarityFilter" 
+                  class="bg-gray-900 border border-gray-800 rounded-lg text-xs text-gray-300 px-2 py-1.5 focus:outline-none focus:border-red-600"
+                >
+                  <option value="all">Todas Raridades</option>
+                  <option value="comum">Comum</option>
+                  <option value="incomum">Incomum</option>
+                  <option value="raro">Raro</option>
+                  <option value="epico">Épico</option>
+                  <option value="lendario">Lendário</option>
+                  <option value="mitico">Mítico</option>
+                </select>
+              </div>
+
+              <!-- Quick Status Summary Pills -->
+              <div class="flex items-center justify-between text-[11px] text-gray-400 px-1 pt-1 border-t border-gray-800/60">
+                <span>Total de Clãs: <strong id="totalClansCount" class="text-gray-200">27</strong></span>
+                <span class="text-red-400 font-semibold"><i class="fa-solid fa-circle-exclamation text-xs mr-1"></i><strong id="totalFullClansCount">6</strong> Lotados</span>
+              </div>
+            </div>
+
+            <!-- Scrollable Clan List -->
+            <div id="clanLimitsListContainer" class="flex-1 overflow-y-auto space-y-2 pr-1">
+              <!-- Dynamically populated in JavaScript -->
+            </div>
+
+            <!-- Footer Tips -->
+            <div class="pt-3 border-t border-gray-800/80 text-[11px] text-gray-500 flex items-center justify-between">
+              <span>* Clãs lotados saem da roleta</span>
+              <span class="text-gray-400">💾 Salvo no navegador</span>
+            </div>
+
+          </div>
+
+          <!-- ================= TAB 2: SESSION ROLLS HISTORY ================= -->
+          <div id="sideTabHistoryContent" class="hidden flex-1 flex flex-col min-h-0 pt-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-heading font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-scroll text-red-500"></i> Histórico de Sorteios
+              </span>
+              <button 
+                id="clearHistoryBtn" 
+                class="text-[11px] text-red-400 hover:text-red-300 flex items-center gap-1 transition"
+                title="Limpar histórico da sessão"
+              >
+                <i class="fa-solid fa-trash-can"></i>
+                <span>Limpar</span>
+              </button>
+            </div>
+
+            <!-- Scrollable History List -->
+            <div id="historyListContainer" class="flex-1 overflow-y-auto space-y-2 pr-1">
+              <!-- History cards populated in JS -->
+            </div>
+            
+            <div class="pt-2 border-t border-gray-800/80 text-[11px] text-gray-500 text-center">
+              Histórico seguro da sessão atual
+            </div>
+          </div>
+
+        </div>
+
+      </aside>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="mt-auto border-t border-tsukuyomi-border bg-tsukuyomi-bg py-3 px-4 text-center text-xs text-gray-500">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+        <p>NINDO TENSEI RPG • Painel da Staff v2.0 • Tema Tsukuyomi Infinito</p>
+        <p class="text-gray-600">Desenvolvido com HTML5 Canvas, Web Audio API & Tailwind</p>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ================= MODAL DE RESULTADO / CERTIFICADO OFICIAL DE PRINT ================= -->
+  <div id="resultModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md hidden transition-all duration-300">
+    <div class="relative w-full max-w-xl max-h-[95vh] overflow-y-auto flex flex-col items-center">
+      
+      <!-- Close Button Top Right -->
+      <button 
+        id="closeResultModalBtn" 
+        class="absolute -top-3 -right-2 sm:-right-4 w-9 h-9 rounded-full bg-red-950 border border-red-600 text-red-200 hover:text-white flex items-center justify-center shadow-lg z-20 transition hover:scale-110"
+        title="Fechar (Esc)"
+      >
+        <i class="fa-solid fa-xmark text-base"></i>
+      </button>
+
+      <!-- THE CAPTURABLE PRINT SCREEN CARD (Target for html2canvas) -->
+      <div id="captureArea" class="w-full bg-[#0d0914] border-2 border-red-600/80 rounded-2xl p-6 sm:p-8 text-center relative overflow-hidden shadow-blood-glow">
+        
+        <!-- Tsukuyomi Visual Background Effects inside Certificate -->
+        <div class="absolute -right-20 -top-20 w-56 h-56 rounded-full bg-red-600/15 blur-2xl pointer-events-none"></div>
+        <div class="absolute -left-20 -bottom-20 w-56 h-56 rounded-full bg-purple-600/15 blur-2xl pointer-events-none"></div>
+        
+        <!-- Watermark Rinnegan Rings -->
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
+          <div class="w-96 h-96 rounded-full border-[12px] border-red-500"></div>
+          <div class="w-72 h-72 rounded-full border-[10px] border-red-500"></div>
+          <div class="w-48 h-48 rounded-full border-[8px] border-red-500"></div>
+        </div>
+
+        <!-- Top Header of Certificate -->
+        <div class="flex items-center justify-between border-b border-red-900/60 pb-3 mb-4 text-left">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-red-950 border border-red-500 flex items-center justify-center shadow">
+              <i class="fa-solid fa-eye text-red-500 text-sm"></i>
+            </div>
+            <div>
+              <h3 class="font-title text-base sm:text-lg font-black tracking-wider text-red-500 glow-red">NINDO TENSEI</h3>
+              <p class="text-[10px] text-gray-400 font-heading uppercase tracking-widest">Certificado Oficial de Sorteio Staff</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span id="certSecurityHash" class="text-[11px] font-mono font-bold text-red-400/90 bg-red-950/80 px-2 py-0.5 rounded border border-red-800/40">#NT-000000</span>
+            <div id="certTimestamp" class="text-[10px] text-gray-400 mt-0.5">21/10/2026 às 21:30:00</div>
+          </div>
+        </div>
+
+        <!-- Player Nick Box (Important for Discord Proof) -->
+        <div class="bg-gradient-to-r from-red-950/50 via-purple-950/40 to-red-950/50 border border-red-800/50 rounded-xl p-3 mb-5 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-inner">
+          <div class="flex items-center gap-2 text-xs text-gray-300">
+            <i class="fa-solid fa-user-ninja text-red-400"></i>
+            <span class="text-gray-400 uppercase tracking-wider font-semibold">Jogador:</span>
+            <span id="certPlayerNick" class="font-bold text-sm sm:text-base text-yellow-400 glow-gold">Não Informado (Giro Livre)</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Categoria:</span>
+            <span id="certCategoryName" class="text-xs font-bold text-red-300 bg-red-950/80 border border-red-700/60 px-2 py-0.5 rounded">Clãs Míticos</span>
+          </div>
+        </div>
+
+        <!-- Big Highlighted Winning Item -->
+        <div class="my-6 py-4">
+          <span class="text-xs uppercase font-heading tracking-widest text-gray-400 block mb-1">Resultado do Destino</span>
+          <div id="certWinnerBadge" class="inline-block px-6 py-3 rounded-2xl bg-gradient-to-r from-red-950/90 via-red-900 to-red-950/90 border-2 border-red-500 shadow-blood-glow">
+            <h2 id="certWinnerTitle" class="text-3xl sm:text-4xl md:text-5xl font-title font-black tracking-wider text-white glow-red uppercase">
+              CLÃ UCHIHA
+            </h2>
+          </div>
+          <p id="certWinnerSubtext" class="text-xs sm:text-sm text-gray-300 mt-2 font-medium">
+            Raridade: Mítico • Sorteado pela Staff
+          </p>
+        </div>
+
+        <!-- Dynamic Clan Capacity Notice & Instant +1 Button inside Certificate -->
+        <div id="certClanCapacityBox" class="bg-gray-900/80 border border-gray-800 rounded-xl p-3 mb-4 hidden flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-users text-red-400"></i>
+            <span class="text-gray-400">Vagas Atuais do Clã:</span>
+            <strong id="certClanVagasText" class="text-gray-200">5 / 10</strong>
+            <span id="certClanFullBadge" class="hidden text-[10px] bg-red-900 text-red-200 px-1.5 py-0.5 rounded font-bold uppercase">Lotado</span>
+          </div>
+          <button 
+            id="certAddVagaBtn" 
+            class="px-3 py-1.5 bg-red-900/80 hover:bg-red-800 text-red-100 font-bold rounded-lg border border-red-600/80 transition flex items-center gap-1.5"
+            title="Adicionar 1 jogador imediatamente às vagas deste clã"
+          >
+            <i class="fa-solid fa-user-plus text-xs"></i>
+            <span>+1 Vaga Preenchida</span>
+          </button>
+        </div>
+
+        <!-- Footer Seal of Authenticity -->
+        <div class="pt-3 border-t border-gray-800/80 flex items-center justify-between text-[10px] text-gray-500">
+          <span>TSUKUYOMI INFINITO • REGISTRO ANTI-FRAUDE</span>
+          <span class="flex items-center gap-1 text-red-400 font-semibold">
+            <i class="fa-solid fa-certificate"></i> Validado pelo Painel Staff
+          </span>
+        </div>
+
+      </div>
+
+      <!-- ACTION BUTTONS: SCREENSHOT DOWNLOAD & CLIPBOARD COPY -->
+      <div class="w-full mt-4 flex flex-col sm:flex-row items-center justify-center gap-3 z-10">
+        
+        <!-- Discord Quick Copy Button (Clipboard) -->
+        <button 
+          id="copyScreenshotBtn" 
+          class="w-full sm:w-auto flex-1 px-5 py-3 bg-gradient-to-r from-indigo-700 to-indigo-900 hover:from-indigo-600 hover:to-indigo-800 text-white font-heading font-bold text-sm rounded-xl border border-indigo-400/60 shadow-lg transition transform hover:scale-[1.02] active:scale-98 flex items-center justify-center gap-2"
+        >
+          <i class="fa-solid fa-clipboard text-indigo-300"></i>
+          <span>Copiar Imagem (Ctrl+V Discord)</span>
+        </button>
+
+        <!-- Download PNG Button -->
+        <button 
+          id="downloadScreenshotBtn" 
+          class="w-full sm:w-auto flex-1 px-5 py-3 bg-gradient-to-r from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 text-white font-heading font-bold text-sm rounded-xl border border-red-500/60 shadow-blood-glow transition transform hover:scale-[1.02] active:scale-98 flex items-center justify-center gap-2"
+        >
+          <i class="fa-solid fa-camera text-red-300"></i>
+          <span>Baixar Imagem (.png)</span>
+        </button>
+
+        <!-- Spin Again / Close -->
+        <button 
+          id="spinAgainBtn" 
+          class="w-full sm:w-auto px-5 py-3 bg-gray-900 hover:bg-gray-800 border border-gray-700 text-gray-300 font-bold text-sm rounded-xl transition flex items-center justify-center gap-2"
+        >
+          <i class="fa-solid fa-rotate-right"></i>
+          <span>Novo Giro</span>
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL DE EDIÇÃO DE PROBABILIDADES (RARIDADE) ================= -->
+  <div id="oddsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden">
+    <div class="bg-tsukuyomi-card border-2 border-purple-700 rounded-2xl p-6 w-full max-w-lg shadow-purple-glow">
+      
+      <div class="flex items-center justify-between border-b border-gray-800 pb-3 mb-4">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-purple-400 text-lg"></i>
+          <h3 class="font-heading font-black text-lg text-white">Editar Probabilidades das Raridades</h3>
+        </div>
+        <button id="closeOddsModalBtn" class="text-gray-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-gray-400 mb-4">
+        Ajuste as porcentagens reais de cada raridade. A roleta recalculará os ângulos e as chances automaticamente.
+      </p>
+
+      <div class="space-y-3 mb-4" id="oddsInputsContainer">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <!-- Total Sum Indicator -->
+      <div class="flex items-center justify-between p-2.5 bg-gray-950 rounded-lg border border-gray-800 mb-4 text-xs font-bold">
+        <span>Soma Total das Chances:</span>
+        <span id="oddsTotalSumBadge" class="text-green-400 text-sm">100%</span>
+      </div>
+
+      <div class="flex items-center justify-between gap-3">
+        <button id="normalizeOddsBtn" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-semibold transition">
+          Auto-Normalizar 100%
+        </button>
+        <div class="flex gap-2">
+          <button id="resetOddsDefaultsBtn" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-semibold transition">
+            Padrões
+          </button>
+          <button id="saveOddsBtn" class="px-5 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded-lg text-xs font-bold transition shadow-md">
+            Salvar e Aplicar
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- APPLICATION LOGIC IN PURE JAVASCRIPT -->
+  <script>
+    /**
+     * NINDO TENSEI - STAFF ROULETTE & VACANCY MANAGER
+     * Single-file complete application script.
+     */
+
+    // --- 1. DEFAULT DATA CONFIGURATION ---
+    
+    // Default Rarity probabilities (editable by Staff)
+    const DEFAULT_RARITY_ODDS = [
+      { id: 'comum', name: 'Comum', percent: 35, color: '#3b82f6', textColor: '#ffffff' },      // Blue
+      { id: 'incomum', name: 'Incomum', percent: 25, color: '#10b981', textColor: '#ffffff' },  // Green
+      { id: 'raro', name: 'Raro', percent: 18, color: '#06b6d4', textColor: '#ffffff' },        // Cyan
+      { id: 'epico', name: 'Épico', percent: 12, color: '#a855f7', textColor: '#ffffff' },      // Purple
+      { id: 'lendario', name: 'Lendário', percent: 5, color: '#f59e0b', textColor: '#111827' }, // Gold
+      { id: 'mitico', name: 'Mítico', percent: 5, color: '#ef4444', textColor: '#ffffff' }      // Crimson
+    ];
+
+    // Default Clans & Initial Capacity state required by prompt
+    const DEFAULT_CLANS = {
+      comum: [
+        { id: 'aburame', name: 'Aburame', occupied: 0, limit: 10 },
+        { id: 'akimichi', name: 'Akimichi', occupied: 0, limit: 10 }
+      ],
+      incomum: [
+        { id: 'hoshigaki', name: 'Hoshigaki', occupied: 0, limit: 10 },
+        { id: 'roshi', name: 'Roshi', occupied: 0, limit: 10 }
+      ],
+      raro: [
+        { id: 'kazesuna', name: 'Kazesuna', occupied: 0, limit: 8 },
+        { id: 'yamanaka', name: 'Yamanaka', occupied: 0, limit: 8 },
+        { id: 'hozuki', name: 'Hozuki', occupied: 0, limit: 8 }
+      ],
+      epico: [
+        { id: 'yuki', name: 'Yuki', occupied: 0, limit: 7 },
+        { id: 'nara', name: 'Nara', occupied: 0, limit: 7 },
+        { id: 'pakura', name: 'Pakura', occupied: 0, limit: 7 },
+        { id: 'inozuka', name: 'Inozuka', occupied: 0, limit: 7 },
+        { id: 'haruno', name: 'Haruno', occupied: 0, limit: 7 },
+        { id: 'sarutobi', name: 'Sarutobi', occupied: 0, limit: 7 },
+        { id: 'bakurei', name: 'Bakurei', occupied: 0, limit: 7 }
+      ],
+      lendario: [
+        { id: 'uzumaki', name: 'Uzumaki', occupied: 0, limit: 5 },
+        { id: 'kaguya', name: 'Kaguya', occupied: 0, limit: 5 },
+        { id: 'namikaze', name: 'Namikaze', occupied: 7, limit: 7 }, // LOTADO
+        { id: 'hatake', name: 'Hatake', occupied: 0, limit: 5 },
+        { id: 'terumi', name: 'Terumi', occupied: 0, limit: 5 },
+        { id: 'chinoike', name: 'Chinoike', occupied: 5, limit: 5 }   // LOTADO
+      ],
+      mitico: [
+        { id: 'uchiha', name: 'Uchiha', occupied: 4, limit: 10 },
+        { id: 'might', name: 'Might', occupied: 0, limit: 5 },
+        { id: 'darui', name: 'Darui', occupied: 2, limit: 2 },       // LOTADO
+        { id: 'senju', name: 'Senju', occupied: 5, limit: 5 },       // LOTADO
+        { id: 'hiruko', name: 'Hiruko', occupied: 0, limit: 5 },
+        { id: 'paper', name: 'Paper', occupied: 0, limit: 5 },
+        { id: 'juugo', name: 'Juugo', occupied: 1, limit: 1 },       // LOTADO
+        { id: 'hyuga', name: 'Hyuga', occupied: 4, limit: 4 },       // LOTADO
+        { id: 'guren', name: 'Guren', occupied: 0, limit: 5 }
+      ]
+    };
+
+    // Static Pools: Villages and Elements
+    const VILLAGES_POOL = [
+      { id: 'konoha', name: 'Konohagakure', subtitle: 'Vila da Folha', color: '#15803d', icon: '🍃' },
+      { id: 'kiri', name: 'Kirigakure', subtitle: 'Vila da Névoa', color: '#0369a1', icon: '💧' },
+      { id: 'suna', name: 'Sunagakure', subtitle: 'Vila da Areia', color: '#b45309', icon: '⏳' }
+    ];
+
+    const ELEMENTS_POOL = [
+      { id: 'katon', name: 'Fogo (Katon)', subtitle: 'Elemento Fogo', color: '#dc2626', icon: '🔥' },
+      { id: 'suiton', name: 'Água (Suiton)', subtitle: 'Elemento Água', color: '#0284c7', icon: '🌊' },
+      { id: 'raiton', name: 'Raio (Raiton)', subtitle: 'Elemento Raio', color: '#eab308', icon: '⚡' },
+      { id: 'doton', name: 'Terra (Doton)', subtitle: 'Elemento Terra', color: '#854d0e', icon: '⛰️' },
+      { id: 'fuuton', name: 'Vento (Fuuton)', subtitle: 'Elemento Vento', color: '#10b981', icon: '🌪️' }
+    ];
+
+    // Palette generator for clans in wheels (harmonious ninja colors)
+    const CLAN_COLOR_PALETTES = [
+      '#991b1b', '#1e40af', '#166534', '#854d0e', '#6b21a8', 
+      '#0e7490', '#9d174d', '#c2410c', '#374151', '#4338ca', 
+      '#065f46', '#86198f', '#b91c1c', '#1d4ed8', '#047857'
+    ];
+
+    // --- 2. STATE MANAGEMENT & LOCAL STORAGE ---
+
+    let clansState = {};
+    let rarityOddsState = [];
+    let activeCategory = 'rarity'; // 'rarity', 'comum', 'incomum', 'raro', 'epico', 'lendario', 'mitico', 'vila', 'elemento'
+    let ignoreLimits = false;
+    let isQuickSpin = false;
+    let isSpinning = false;
+    let soundEnabled = true;
+    let sessionHistory = [];
+    let lastWinnerData = null;
+
+    // Load from LocalStorage or initialize
+    function loadAppState() {
+      // Clans
+      const savedClans = localStorage.getItem('nindo_tensei_clan_limits_v2');
+      if (savedClans) {
+        try {
+          clansState = JSON.parse(savedClans);
+        } catch(e) {
+          clansState = JSON.parse(JSON.stringify(DEFAULT_CLANS));
+        }
+      } else {
+        clansState = JSON.parse(JSON.stringify(DEFAULT_CLANS));
+      }
+
+      // Odds
+      const savedOdds = localStorage.getItem('nindo_tensei_rarity_odds_v2');
+      if (savedOdds) {
+        try {
+          rarityOddsState = JSON.parse(savedOdds);
+        } catch(e) {
+          rarityOddsState = JSON.parse(JSON.stringify(DEFAULT_RARITY_ODDS));
+        }
+      } else {
+        rarityOddsState = JSON.parse(JSON.stringify(DEFAULT_RARITY_ODDS));
+      }
+
+      // History
+      const savedHist = localStorage.getItem('nindo_tensei_history');
+      if (savedHist) {
+        try {
+          sessionHistory = JSON.parse(savedHist);
+        } catch(e) {
+          sessionHistory = [];
+        }
+      }
+    }
+
+    function saveClansState() {
+      localStorage.setItem('nindo_tensei_clan_limits_v2', JSON.stringify(clansState));
+      renderClanLimitsManager();
+      updateWheelPool();
+    }
+
+    function saveOddsState() {
+      localStorage.setItem('nindo_tensei_rarity_odds_v2', JSON.stringify(rarityOddsState));
+      updateWheelPool();
+    }
+
+    function saveHistoryState() {
+      localStorage.setItem('nindo_tensei_history', JSON.stringify(sessionHistory));
+      renderHistoryList();
+    }
+
+    // --- 3. WEB AUDIO SYNTHESIZER (TICK & WIN FANFARE) ---
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playTickSound() {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440 + Math.random() * 80, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+      } catch(e) {
+        // Audio might be blocked until user gesture
+      }
+    }
+
+    function playWinSound(isEpic = false) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        const now = audioCtx.currentTime;
+        
+        // Taiko drum thud
+        const thudOsc = audioCtx.createOscillator();
+        const thudGain = audioCtx.createGain();
+        thudOsc.type = 'sine';
+        thudOsc.frequency.setValueAtTime(140, now);
+        thudOsc.frequency.exponentialRampToValueAtTime(35, now + 0.4);
+        thudGain.gain.setValueAtTime(0.4, now);
+        thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        thudOsc.connect(thudGain);
+        thudGain.connect(audioCtx.destination);
+        thudOsc.start(now);
+        thudOsc.stop(now + 0.4);
+
+        // Chimes
+        const notes = isEpic ? [523.25, 659.25, 783.99, 1046.50] : [440, 554.37, 659.25];
+        notes.forEach((freq, idx) => {
+          const chimeOsc = audioCtx.createOscillator();
+          const chimeGain = audioCtx.createGain();
+          chimeOsc.type = 'sine';
+          chimeOsc.frequency.setValueAtTime(freq, now + idx * 0.08);
+          chimeGain.gain.setValueAtTime(0.2, now + idx * 0.08);
+          chimeGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.6);
+          chimeOsc.connect(chimeGain);
+          chimeGain.connect(audioCtx.destination);
+          chimeOsc.start(now + idx * 0.08);
+          chimeOsc.stop(now + idx * 0.08 + 0.6);
+        });
+      } catch(e) {}
+    }
+
+    // --- 4. TSUKUYOMI AMBIENT PARTICLES (CANVAS) ---
+    function initAmbienceParticles() {
+      const canvas = document.getElementById('ambienceCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let width = canvas.width = window.innerWidth;
+      let height = canvas.height = window.innerHeight;
+
+      window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      });
+
+      const particles = [];
+      const particleCount = 45;
+
+      for (let i = 0; i < particleCount; i++) {
+        particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          radius: Math.random() * 2 + 0.8,
+          speedY: Math.random() * 0.6 + 0.2,
+          speedX: (Math.random() - 0.5) * 0.4,
+          alpha: Math.random() * 0.6 + 0.2,
+          color: Math.random() > 0.3 ? '#ef4444' : '#a855f7'
+        });
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+        particles.forEach(p => {
+          p.y -= p.speedY;
+          p.x += p.speedX;
+          if (p.y < 0) {
+            p.y = height + 10;
+            p.x = Math.random() * width;
+          }
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.alpha;
+          ctx.fill();
+        });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    // --- 5. CATEGORY TABS SETUP ---
+    const CATEGORIES = [
+      { id: 'rarity', name: 'Raridade', icon: 'fa-dice', color: 'border-blue-500' },
+      { id: 'comum', name: 'Clãs Comuns', icon: 'fa-shield-halved', color: 'border-blue-400' },
+      { id: 'incomum', name: 'Clãs Incomuns', icon: 'fa-shield-halved', color: 'border-emerald-500' },
+      { id: 'raro', name: 'Clãs Raros', icon: 'fa-shield-halved', color: 'border-cyan-400' },
+      { id: 'epico', name: 'Clãs Épicos', icon: 'fa-shield-halved', color: 'border-purple-500' },
+      { id: 'lendario', name: 'Clãs Lendários', icon: 'fa-crown', color: 'border-amber-500' },
+      { id: 'mitico', name: 'Clãs Míticos', icon: 'fa-eye', color: 'border-red-600' },
+      { id: 'vila', name: 'Girar Vila', icon: 'fa-landmark', color: 'border-emerald-600' },
+      { id: 'elemento', name: 'Girar Elemento', icon: 'fa-fire', color: 'border-orange-500' }
+    ];
+
+    function renderCategoryTabs() {
+      const container = document.getElementById('categoryTabsContainer');
+      container.innerHTML = '';
+
+      CATEGORIES.forEach(cat => {
+        const btn = document.createElement('button');
+        const isActive = cat.id === activeCategory;
+        btn.className = `py-2 px-1.5 rounded-lg border text-center transition flex flex-col sm:flex-row items-center justify-center gap-1.5 ${
+          isActive 
+            ? 'bg-red-950 text-white border-red-500 shadow-blood-glow font-bold' 
+            : 'bg-tsukuyomi-cardLight text-gray-400 border-gray-800 hover:text-gray-200 hover:border-gray-700'
+        }`;
+        btn.innerHTML = `
+          <i class="fa-solid ${cat.icon} text-xs ${isActive ? 'text-red-400' : 'text-gray-500'}"></i>
+          <span class="truncate text-[11px]">${cat.name}</span>
+        `;
+        btn.onclick = () => {
+          if (isSpinning) return;
+          setActiveCategory(cat.id);
+        };
+        container.appendChild(btn);
+      });
+
+      // Update badge
+      const currentCatObj = CATEGORIES.find(c => c.id === activeCategory);
+      if (currentCatObj) {
+        document.getElementById('activeCategoryBadge').innerHTML = `
+          <i class="fa-solid ${currentCatObj.icon} mr-1"></i> ${currentCatObj.name}
+        `;
+      }
+    }
+
+    function setActiveCategory(catId) {
+      activeCategory = catId;
+      renderCategoryTabs();
+      
+      // Toggle visibility of "Editar % Chances" button (only for rarity tab)
+      const editOddsBtn = document.getElementById('editOddsQuickBtn');
+      if (catId === 'rarity') {
+        editOddsBtn.classList.remove('hidden');
+      } else {
+        editOddsBtn.classList.add('hidden');
+      }
+
+      updateWheelPool();
+    }
+
+    // --- 6. WHEEL POOL GENERATOR (RESPECTS LIMITS & WEIGHTS) ---
+    let currentWheelItems = []; // Array of { label, sublabel, color, textColor, weight, isLotado, originalItem }
+
+    function updateWheelPool() {
+      const titleEl = document.getElementById('currentPoolTitle');
+      const descEl = document.getElementById('currentPoolDescription');
+      const alertBox = document.getElementById('fullClansAlert');
+      const alertText = document.getElementById('fullClansAlertText');
+
+      alertBox.classList.add('hidden');
+      currentWheelItems = [];
+
+      if (activeCategory === 'rarity') {
+        titleEl.textContent = 'Girar Raridade';
+        descEl.textContent = 'Sorteio ponderado com chances reais configuráveis para cada raridade.';
+        
+        currentWheelItems = rarityOddsState.map(r => ({
+          id: r.id,
+          label: r.name,
+          sublabel: `${r.percent}%`,
+          color: r.color,
+          textColor: r.textColor || '#ffffff',
+          weight: r.percent,
+          type: 'rarity'
+        }));
+      } 
+      else if (['comum', 'incomum', 'raro', 'epico', 'lendario', 'mitico'].includes(activeCategory)) {
+        const rarityNames = {
+          comum: 'Clãs Comuns',
+          incomum: 'Clãs Incomuns',
+          raro: 'Clãs Raros',
+          epico: 'Clãs Épicos',
+          lendario: 'Clãs Lendários',
+          mitico: 'Clãs Míticos'
+        };
+        titleEl.textContent = rarityNames[activeCategory];
+        descEl.textContent = `Sorteio de clã ninja da categoria ${rarityNames[activeCategory]}.`;
+
+        const clansInRarity = clansState[activeCategory] || [];
+        let fullCount = 0;
+
+        clansInRarity.forEach((clan, idx) => {
+          const isFull = clan.limit !== null && clan.limit !== undefined && clan.limit !== '??' && clan.occupied >= clan.limit;
+          if (isFull) fullCount++;
+
+          // If ignoreLimits is false, skip full clans from wheel!
+          if (!ignoreLimits && isFull) {
+            return;
+          }
+
+          const paletteColor = CLAN_COLOR_PALETTES[idx % CLAN_COLOR_PALETTES.length];
+          const vagasStr = clan.limit === '??' ? `${clan.occupied}/??` : `${clan.occupied}/${clan.limit}`;
+
+          currentWheelItems.push({
+            id: clan.id,
+            label: clan.name,
+            sublabel: `Vagas: ${vagasStr}`,
+            color: paletteColor,
+            textColor: '#ffffff',
+            weight: 1, // equal chance among available clans
+            type: 'clan',
+            rarity: activeCategory,
+            clanData: clan
+          });
+        });
+
+        if (fullCount > 0 && !ignoreLimits) {
+          alertBox.classList.remove('hidden');
+          alertText.textContent = `${fullCount} clã(s) lotado(s) removido(s) da roleta`;
+        }
+      } 
+      else if (activeCategory === 'vila') {
+        titleEl.textContent = 'Girar Vila';
+        descEl.textContent = 'Sorteio de uma das três grandes vilas ninjas.';
+        currentWheelItems = VILLAGES_POOL.map(v => ({
+          id: v.id,
+          label: v.name,
+          sublabel: v.subtitle,
+          color: v.color,
+          textColor: '#ffffff',
+          weight: 1,
+          type: 'village'
+        }));
+      } 
+      else if (activeCategory === 'elemento') {
+        titleEl.textContent = 'Girar Elemento';
+        descEl.textContent = 'Sorteio do elemento primário de chakra do ninja.';
+        currentWheelItems = ELEMENTS_POOL.map(e => ({
+          id: e.id,
+          label: e.name,
+          sublabel: e.subtitle,
+          color: e.color,
+          textColor: '#ffffff',
+          weight: 1,
+          type: 'element'
+        }));
+      }
+
+      // If wheel is completely empty (e.g. all clans in that rarity are full!)
+      const spinBtn = document.getElementById('spinBtn');
+      if (currentWheelItems.length === 0) {
+        spinBtn.disabled = true;
+        document.getElementById('rouletteStatusMsg').textContent = '⚠️ Todos os clãs desta raridade estão lotados! Habilite "Ignorar Limites" ou libere vagas.';
+      } else {
+        spinBtn.disabled = false;
+        document.getElementById('rouletteStatusMsg').textContent = `${currentWheelItems.length} opções disponíveis nesta roleta.`;
+      }
+
+      calculateWheelSlices();
+      drawRouletteWheel();
+    }
+
+    // --- 7. WHEEL RENDERING ENGINE (CANVAS & RINNE SHARINGAN) ---
+    const canvas = document.getElementById('rouletteCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let wheelAngle = 0; // Current rotation in radians
+    let sliceAngles = []; // Slices with startAngle & endAngle
+
+    function calculateWheelSlices() {
+      sliceAngles = [];
+      if (currentWheelItems.length === 0) return;
+
+      const totalWeight = currentWheelItems.reduce((sum, item) => sum + (item.weight || 1), 0);
+      let cumulativeAngle = 0;
+
+      currentWheelItems.forEach(item => {
+        const sliceAngle = ((item.weight || 1) / totalWeight) * (Math.PI * 2);
+        sliceAngles.push({
+          startAngle: cumulativeAngle,
+          endAngle: cumulativeAngle + sliceAngle,
+          item: item
+        });
+        cumulativeAngle += sliceAngle;
+      });
+    }
+
+    // High-resolution canvas support
+    function setupCanvasDPI() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const logicalWidth = 460;
+      const logicalHeight = 460;
+
+      canvas.width = logicalWidth * dpr;
+      canvas.height = logicalHeight * dpr;
+      ctx.scale(dpr, dpr);
+    }
+    setupCanvasDPI();
+
+    // Draw the Rinne-Sharingan Hub at the center
+    function drawRinneSharinganCenter(cx, cy, radius) {
+      ctx.save();
+
+      // Outer Crimson Ring
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#110508';
+      ctx.fill();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#e50914';
+      ctx.stroke();
+
+      // Glowing Blood Iris
+      const irisGradient = ctx.createRadialGradient(cx, cy, 2, cx, cy, radius - 3);
+      irisGradient.addColorStop(0, '#ff1a1a');
+      irisGradient.addColorStop(0.4, '#b91c1c');
+      irisGradient.addColorStop(0.85, '#7f1d1d');
+      irisGradient.addColorStop(1, '#3b0d0d');
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius - 3, 0, Math.PI * 2);
+      ctx.fillStyle = irisGradient;
+      ctx.fill();
+
+      // Rinnegan Concentric Ripple Circles
+      const rings = [radius * 0.35, radius * 0.6, radius * 0.82];
+      ctx.strokeStyle = '#1a0505';
+      ctx.lineWidth = 1.8;
+
+      rings.forEach(r => {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+
+      // Pupil in Center
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 0.16, 0, Math.PI * 2);
+      ctx.fillStyle = '#0a0002';
+      ctx.fill();
+
+      // 3 Tomoe on Middle Ring
+      const tomoeRadius = rings[1];
+      for (let i = 0; i < 3; i++) {
+        const tomoeAngle = (i * (Math.PI * 2 / 3));
+        const tx = cx + Math.cos(tomoeAngle) * tomoeRadius;
+        const ty = cy + Math.sin(tomoeAngle) * tomoeRadius;
+
+        ctx.save();
+        ctx.translate(tx, ty);
+        ctx.rotate(tomoeAngle + Math.PI / 2);
+
+        // Draw Tomoe Head & Tail
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * 0.08, 0, Math.PI * 2);
+        ctx.fillStyle = '#0a0002';
+        ctx.fill();
+
+        // Tomoe curved tail
+        ctx.beginPath();
+        ctx.moveTo(radius * 0.06, 0);
+        ctx.quadraticCurveTo(radius * 0.1, -radius * 0.12, 0, -radius * 0.16);
+        ctx.quadraticCurveTo(radius * 0.02, -radius * 0.08, 0, 0);
+        ctx.fillStyle = '#0a0002';
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      ctx.restore();
+    }
+
+    // Main Draw Function
+    function drawRouletteWheel() {
+      const width = 460;
+      const height = 460;
+      const cx = width / 2;
+      const cy = height / 2;
+      const outerRadius = width / 2 - 12;
+      const innerRadius = 52; // Rinne Sharingan size
+
+      ctx.clearRect(0, 0, width, height);
+
+      if (sliceAngles.length === 0) {
+        // Draw empty wheel state
+        ctx.beginPath();
+        ctx.arc(cx, cy, outerRadius, 0, Math.PI * 2);
+        ctx.fillStyle = '#181124';
+        ctx.fill();
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#3b1228';
+        ctx.stroke();
+
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = 'bold 15px Rajdhani';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Nenhuma opção disponível', cx, cy);
+        return;
+      }
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(wheelAngle);
+
+      // Draw each slice
+      sliceAngles.forEach(slice => {
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, outerRadius, slice.startAngle, slice.endAngle);
+        ctx.closePath();
+
+        // Fill Slice
+        ctx.fillStyle = slice.item.color;
+        ctx.fill();
+
+        // Slice borders with golden/dark separator
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#120d1c';
+        ctx.stroke();
+
+        // Slice Text Drawing
+        ctx.save();
+        const midAngle = slice.startAngle + (slice.endAngle - slice.startAngle) / 2;
+        ctx.rotate(midAngle);
+
+        // Text Position
+        const textRadius = outerRadius * 0.65;
+        ctx.translate(textRadius, 0);
+
+        // Check if slice is narrow (many items)
+        const sliceArc = slice.endAngle - slice.startAngle;
+        const isNarrow = sliceArc < 0.28;
+
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = slice.item.textColor || '#ffffff';
+        
+        // Font sizing based on item count
+        const fontSize = isNarrow ? 11 : (currentWheelItems.length > 8 ? 12 : 14);
+        ctx.font = `bold ${fontSize}px Rajdhani`;
+
+        // Shadow for readability
+        ctx.shadowColor = 'rgba(0,0,0,0.85)';
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+
+        // Truncate if long
+        let label = slice.item.label;
+        if (label.length > 14 && isNarrow) {
+          label = label.substring(0, 12) + '..';
+        }
+
+        ctx.fillText(label, 0, isNarrow ? 0 : -5);
+
+        // Secondary sublabel if space allows
+        if (!isNarrow && slice.item.sublabel) {
+          ctx.font = '600 10px Rajdhani';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+          ctx.fillText(slice.item.sublabel, 0, 10);
+        }
+
+        ctx.restore();
+      });
+
+      // Outer Edge Golden Studs
+      const studCount = Math.max(12, currentWheelItems.length * 2);
+      for (let i = 0; i < studCount; i++) {
+        const sAngle = (i * (Math.PI * 2 / studCount));
+        const sx = Math.cos(sAngle) * (outerRadius - 4);
+        const sy = Math.sin(sAngle) * (outerRadius - 4);
+
+        ctx.beginPath();
+        ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffdf00';
+        ctx.fill();
+        ctx.strokeStyle = '#854d0e';
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      }
+
+      ctx.restore();
+
+      // Outer Rim Border
+      ctx.beginPath();
+      ctx.arc(cx, cy, outerRadius, 0, Math.PI * 2);
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = '#e50914';
+      ctx.stroke();
+
+      // Center Rinne-Sharingan Hub (doesn't rotate with wheel, or rotates smoothly)
+      drawRinneSharinganCenter(cx, cy, innerRadius);
+    }
+
+    // --- 8. SPIN PHYSICS & SOUND ENGINE ---
+    let spinVelocity = 0;
+    let spinFriction = 0.985;
+    let lastTickIndex = -1;
+
+    function getSliceAtPointer() {
+      if (sliceAngles.length === 0) return null;
+
+      // Pointer is at the TOP (12 o'clock, which is -Math.PI / 2 or 3 * Math.PI / 2)
+      const pointerAngle = (3 * Math.PI / 2);
+      
+      // Normalize wheel angle to 0 .. 2PI
+      const normalizedWheel = (wheelAngle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+      
+      // Calculate which slice touches pointer: (pointerAngle - normalizedWheel) % 2PI
+      const effectiveAngle = ((pointerAngle - normalizedWheel) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+
+      for (let i = 0; i < sliceAngles.length; i++) {
+        const s = sliceAngles[i];
+        if (effectiveAngle >= s.startAngle && effectiveAngle < s.endAngle) {
+          return { slice: s, index: i };
+        }
+      }
+      return { slice: sliceAngles[0], index: 0 };
+    }
+
+    function triggerSpin() {
+      if (isSpinning || currentWheelItems.length === 0) return;
+      initAudio();
+
+      isSpinning = true;
+      document.getElementById('spinBtn').disabled = true;
+      document.getElementById('rouletteStatusMsg').textContent = '🌀 O destino está sendo selado no Tsukuyomi...';
+
+      // Flapper animation indicator
+      const flapper = document.getElementById('wheelFlapper');
+
+      // Speed tuning
+      if (isQuickSpin) {
+        spinVelocity = 0.55 + Math.random() * 0.25;
+        spinFriction = 0.94; // stops quickly in ~2.5s
+      } else {
+        spinVelocity = 0.45 + Math.random() * 0.25;
+        spinFriction = 0.983; // smooth deceleration ~6s
+      }
+
+      function spinLoop() {
+        wheelAngle += spinVelocity;
+        spinVelocity *= spinFriction;
+
+        // Check tick for sound
+        const currentSliceInfo = getSliceAtPointer();
+        if (currentSliceInfo && currentSliceInfo.index !== lastTickIndex) {
+          lastTickIndex = currentSliceInfo.index;
+          playTickSound();
+          
+          // Animate flapper bounce
+          flapper.classList.remove('flapper-ticking');
+          void flapper.offsetWidth; // trigger reflow
+          flapper.classList.add('flapper-ticking');
+        }
+
+        drawRouletteWheel();
+
+        // Deceleration threshold
+        if (spinVelocity > 0.0018) {
+          requestAnimationFrame(spinLoop);
+        } else {
+          // Finished spinning!
+          isSpinning = false;
+          spinVelocity = 0;
+          document.getElementById('spinBtn').disabled = false;
+          flapper.classList.remove('flapper-ticking');
+
+          const finalWinner = getSliceAtPointer();
+          if (finalWinner) {
+            handleSpinWinner(finalWinner.slice.item);
+          }
+        }
+      }
+
+      requestAnimationFrame(spinLoop);
+    }
+
+    // --- 9. WINNER HANDLING, MODAL & STATS ---
+
+    function generateSecurityHash() {
+      const chars = '0123456789ABCDEF';
+      let hash = '#NT-';
+      for (let i = 0; i < 6; i++) {
+        hash += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return hash;
+    }
+
+    function formatDateTime(date) {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      return `${day}/${month}/${year} às ${hours}:${minutes}:${seconds}`;
+    }
+
+    function handleSpinWinner(item) {
+      const now = new Date();
+      const nickInput = document.getElementById('playerNickInput');
+      const playerNick = nickInput.value.trim() || 'Não Informado (Giro Livre)';
+      const currentCatObj = CATEGORIES.find(c => c.id === activeCategory);
+      const categoryName = currentCatObj ? currentCatObj.name : 'Sorteio';
+
+      const isHighTier = item.id === 'lendario' || item.id === 'mitico' || 
+                         (item.type === 'clan' && (item.rarity === 'lendario' || item.rarity === 'mitico'));
+
+      // Audio & Confetti
+      playWinSound(isHighTier);
+      if (isHighTier && typeof confetti === 'function') {
+        confetti({
+          particleCount: 110,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ['#e50914', '#f59e0b', '#a855f7', '#ffffff']
+        });
+      }
+
+      // Prepare winner record
+      const winnerData = {
+        id: Date.now(),
+        timestamp: formatDateTime(now),
+        rawDate: now.getTime(),
+        securityHash: generateSecurityHash(),
+        nick: playerNick,
+        category: categoryName,
+        categoryKey: activeCategory,
+        itemName: item.label,
+        itemType: item.type,
+        color: item.color,
+        item: item
+      };
+
+      lastWinnerData = winnerData;
+
+      // Add to session history
+      sessionHistory.unshift(winnerData);
+      if (sessionHistory.length > 50) sessionHistory.pop();
+      saveHistoryState();
+
+      // Update Last spin summary in main UI
+      document.getElementById('lastSpinSummary').innerHTML = `
+        <span class="text-white font-bold">${item.label}</span> 
+        <span class="text-gray-400">(${playerNick !== 'Não Informado (Giro Livre)' ? playerNick : 'Livre'})</span>
+      `;
+      document.getElementById('rouletteStatusMsg').innerHTML = `
+        🎉 Resultado: <strong class="text-white">${item.label}</strong> para <strong class="text-yellow-400">${playerNick}</strong>!
+      `;
+
+      // Open the Discord-ready Certificate Modal
+      openResultModal(winnerData);
+    }
+
+    function openResultModal(data) {
+      document.getElementById('certSecurityHash').textContent = data.securityHash;
+      document.getElementById('certTimestamp').textContent = data.timestamp;
+      document.getElementById('certPlayerNick').textContent = data.nick;
+      document.getElementById('certCategoryName').textContent = data.category;
+      
+      const winnerTitle = document.getElementById('certWinnerTitle');
+      winnerTitle.textContent = data.itemName;
+      winnerTitle.style.color = '#ffffff';
+
+      // Badge style
+      const winnerBadge = document.getElementById('certWinnerBadge');
+      winnerBadge.style.borderColor = data.color || '#e50914';
+
+      // Subtext
+      const subtext = document.getElementById('certWinnerSubtext');
+      if (data.itemType === 'clan') {
+        const rarityNames = {
+          comum: 'Comum', incomum: 'Incomum', raro: 'Raro',
+          epico: 'Épico', lendario: 'Lendário', mitico: 'Mítico'
+        };
+        subtext.textContent = `Clã Ninja • Raridade: ${rarityNames[data.item.rarity] || 'Ninja'} • Sorteado pela Staff`;
+      } else if (data.itemType === 'rarity') {
+        subtext.textContent = `Raridade Sorteada • O jogador tem direito a girar a roleta desta categoria`;
+      } else if (data.itemType === 'village') {
+        subtext.textContent = `Vila de Origem • ${data.item.sublabel}`;
+      } else if (data.itemType === 'element') {
+        subtext.textContent = `Afinidade Elemental • ${data.item.sublabel}`;
+      } else {
+        subtext.textContent = `Sorteio Staff • Nindo Tensei`;
+      }
+
+      // Clan vacancy interactive box inside modal
+      const clanBox = document.getElementById('certClanCapacityBox');
+      const addVagaBtn = document.getElementById('certAddVagaBtn');
+
+      if (data.itemType === 'clan' && data.item.clanData) {
+        const clan = data.item.clanData;
+        clanBox.classList.remove('hidden');
+        clanBox.classList.add('flex');
+
+        updateModalClanCapacityView(clan);
+
+        addVagaBtn.onclick = () => {
+          incrementClanVacancy(data.item.rarity, clan.id);
+          // Re-fetch updated clan object
+          const updatedClan = clansState[data.item.rarity].find(c => c.id === clan.id);
+          if (updatedClan) {
+            updateModalClanCapacityView(updatedClan);
+          }
+          showToast(`+1 Vaga preenchida para o Clã ${clan.name}!`);
+        };
+      } else {
+        clanBox.classList.add('hidden');
+        clanBox.classList.remove('flex');
+      }
+
+      const modal = document.getElementById('resultModal');
+      modal.classList.remove('hidden');
+    }
+
+    function updateModalClanCapacityView(clan) {
+      const vagasText = document.getElementById('certClanVagasText');
+      const fullBadge = document.getElementById('certClanFullBadge');
+      const limitStr = clan.limit === '??' ? '??' : clan.limit;
+      vagasText.textContent = `${clan.occupied} / ${limitStr}`;
+
+      const isFull = clan.limit !== '??' && clan.limit !== null && clan.occupied >= clan.limit;
+      if (isFull) {
+        fullBadge.classList.remove('hidden');
+      } else {
+        fullBadge.classList.add('hidden');
+      }
+    }
+
+    function closeResultModal() {
+      document.getElementById('resultModal').classList.add('hidden');
+    }
+
+    // --- 10. SCREENSHOT SYSTEM (HTML2CANVAS & CLIPBOARD COPY) ---
+
+    // Download PNG File
+    async function downloadCertificateScreenshot() {
+      const captureElem = document.getElementById('captureArea');
+      showToast('📸 Gerando imagem em alta resolução...');
+
+      try {
+        const canvas = await html2canvas(captureElem, {
+          backgroundColor: '#0d0914',
+          scale: 2, // Crisp 2x retina screenshot
+          useCORS: true,
+          logging: false
+        });
+
+        const link = document.createElement('a');
+        const nickClean = (lastWinnerData?.nick || 'ninja').replace(/[^a-zA-Z0-9_-]/g, '_');
+        link.download = `nindo-tensei-sorteio-${nickClean}-${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        showToast('✅ Print baixado com sucesso!');
+      } catch (err) {
+        console.error(err);
+        showToast('❌ Erro ao gerar imagem.');
+      }
+    }
+
+    // Copy PNG directly to Clipboard (for instant Discord Ctrl+V)
+    async function copyCertificateToClipboard() {
+      const captureElem = document.getElementById('captureArea');
+      showToast('📋 Renderizando print para a Área de Transferência...');
+
+      try {
+        const canvas = await html2canvas(captureElem, {
+          backgroundColor: '#0d0914',
+          scale: 2,
+          useCORS: true,
+          logging: false
+        });
+
+        canvas.toBlob(async (blob) => {
+          if (!blob) {
+            showToast('❌ Falha ao processar print.');
+            return;
+          }
+
+          if (navigator.clipboard && window.ClipboardItem) {
+            try {
+              await navigator.clipboard.write([
+                new ClipboardItem({ 'image/png': blob })
+              ]);
+              showToast('🎉 Print copiado! Dê Ctrl+V direto no Discord!');
+            } catch (clipboardErr) {
+              console.warn('Clipboard write error:', clipboardErr);
+              // Fallback: download image instead
+              const link = document.createElement('a');
+              link.download = `nindo-tensei-sorteio-${Date.now()}.png`;
+              link.href = URL.createObjectURL(blob);
+              link.click();
+              showToast('⚠️ Permissão de clipboard negada. Imagem baixada!');
+            }
+          } else {
+            // Older browser fallback
+            const link = document.createElement('a');
+            link.download = `nindo-tensei-sorteio-${Date.now()}.png`;
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            showToast('⚠️ Baixado automaticamente.');
+          }
+        }, 'image/png');
+
+      } catch (err) {
+        console.error(err);
+        showToast('❌ Erro ao capturar imagem.');
+      }
+    }
+
+    // --- 11. CLAN LIMITS MANAGER (UI & CONTROLS) ---
+
+    function incrementClanVacancy(rarity, clanId) {
+      const list = clansState[rarity];
+      if (!list) return;
+      const clan = list.find(c => c.id === clanId);
+      if (clan) {
+        clan.occupied += 1;
+        saveClansState();
+      }
+    }
+
+    function decrementClanVacancy(rarity, clanId) {
+      const list = clansState[rarity];
+      if (!list) return;
+      const clan = list.find(c => c.id === clanId);
+      if (clan && clan.occupied > 0) {
+        clan.occupied -= 1;
+        saveClansState();
+      }
+    }
+
+    function setClanLimit(rarity, clanId, newLimit) {
+      const list = clansState[rarity];
+      if (!list) return;
+      const clan = list.find(c => c.id === clanId);
+      if (clan) {
+        clan.limit = newLimit;
+        saveClansState();
+      }
+    }
+
+    function renderClanLimitsManager() {
+      const container = document.getElementById('clanLimitsListContainer');
+      const searchFilter = document.getElementById('clanSearchInput').value.toLowerCase().trim();
+      const rarityFilter = document.getElementById('clanRarityFilter').value;
+
+      container.innerHTML = '';
+
+      let totalClans = 0;
+      let totalFull = 0;
+
+      const rarityOrder = ['comum', 'incomum', 'raro', 'epico', 'lendario', 'mitico'];
+      const rarityLabels = {
+        comum: { name: 'Comum', color: 'text-blue-400', badge: 'bg-blue-950/80 border-blue-800' },
+        incomum: { name: 'Incomum', color: 'text-emerald-400', badge: 'bg-emerald-950/80 border-emerald-800' },
+        raro: { name: 'Raro', color: 'text-cyan-400', badge: 'bg-cyan-950/80 border-cyan-800' },
+        epico: { name: 'Épico', color: 'text-purple-400', badge: 'bg-purple-950/80 border-purple-800' },
+        lendario: { name: 'Lendário', color: 'text-amber-400', badge: 'bg-amber-950/80 border-amber-800' },
+        mitico: { name: 'Mítico', color: 'text-red-400', badge: 'bg-red-950/80 border-red-800' }
+      };
+
+      rarityOrder.forEach(rarityKey => {
+        if (rarityFilter !== 'all' && rarityFilter !== rarityKey) return;
+
+        const clans = clansState[rarityKey] || [];
+        
+        // Filter by search
+        const filteredClans = clans.filter(c => c.name.toLowerCase().includes(searchFilter));
+        if (filteredClans.length === 0) return;
+
+        // Group Header
+        const groupHeader = document.createElement('div');
+        groupHeader.className = 'pt-2 pb-1 px-1 flex items-center justify-between border-b border-gray-800/60';
+        groupHeader.innerHTML = `
+          <span class="text-[11px] font-bold uppercase tracking-wider ${rarityLabels[rarityKey].color}">
+            ${rarityLabels[rarityKey].name}
+          </span>
+          <span class="text-[10px] text-gray-500">${filteredClans.length} clã(s)</span>
+        `;
+        container.appendChild(groupHeader);
+
+        filteredClans.forEach(clan => {
+          totalClans++;
+          const isUnlimited = clan.limit === '??' || clan.limit === null;
+          const isFull = !isUnlimited && clan.occupied >= clan.limit;
+          if (isFull) totalFull++;
+
+          // Progress percentage
+          let progressPercent = 0;
+          if (!isUnlimited && clan.limit > 0) {
+            progressPercent = Math.min(100, Math.round((clan.occupied / clan.limit) * 100));
+          }
+
+          const card = document.createElement('div');
+          card.className = `p-2.5 rounded-xl border transition ${
+            isFull 
+              ? 'bg-red-950/30 border-red-900/80' 
+              : 'bg-tsukuyomi-cardLight border-gray-800/80 hover:border-gray-700'
+          }`;
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              
+              <!-- Clan Name & Full Tag -->
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span class="font-bold text-xs text-gray-200 truncate">${clan.name}</span>
+                ${isFull ? `
+                  <span class="px-1.5 py-0.2 text-[9px] font-black uppercase tracking-wider bg-red-600 text-white rounded animate-pulse">
+                    LOTADO
+                  </span>
+                ` : ''}
+              </div>
+
+              <!-- Vacancy Indicator [Ocupados / Limite] -->
+              <div class="text-xs font-mono font-bold flex items-center gap-1">
+                <span class="${isFull ? 'text-red-400 font-black' : 'text-gray-300'}">${clan.occupied}</span>
+                <span class="text-gray-500">/</span>
+                <span class="text-gray-400">${isUnlimited ? '??' : clan.limit}</span>
+              </div>
+            </div>
+
+            <!-- Visual Bar -->
+            <div class="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden mb-2">
+              <div 
+                class="h-full rounded-full transition-all duration-300 ${
+                  isFull ? 'bg-red-600' : (progressPercent > 70 ? 'bg-amber-500' : 'bg-emerald-500')
+                }" 
+                style="width: ${isUnlimited ? '25%' : progressPercent + '%'};"
+              ></div>
+            </div>
+
+            <!-- Interactive Buttons: [+] [-] and Limit Edit -->
+            <div class="flex items-center justify-between gap-2 text-xs">
+              
+              <!-- Occupied Controls -->
+              <div class="flex items-center gap-1">
+                <button 
+                  data-action="dec-occupied" 
+                  data-rarity="${rarityKey}" 
+                  data-id="${clan.id}" 
+                  class="w-6 h-6 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold flex items-center justify-center transition border border-gray-700 active:scale-95"
+                  title="Diminuir ocupados (-1)"
+                >
+                  <i class="fa-solid fa-minus text-[10px]"></i>
+                </button>
+                <button 
+                  data-action="inc-occupied" 
+                  data-rarity="${rarityKey}" 
+                  data-id="${clan.id}" 
+                  class="w-6 h-6 rounded bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold flex items-center justify-center transition border border-gray-700 active:scale-95"
+                  title="Aumentar ocupados (+1)"
+                >
+                  <i class="fa-solid fa-plus text-[10px]"></i>
+                </button>
+                <span class="text-[10px] text-gray-500 ml-1">Ocupados</span>
+              </div>
+
+              <!-- Max Limit Controls -->
+              <div class="flex items-center gap-1">
+                <button 
+                  data-action="dec-limit" 
+                  data-rarity="${rarityKey}" 
+                  data-id="${clan.id}" 
+                  class="w-6 h-6 rounded bg-gray-900 hover:bg-gray-800 text-gray-400 font-bold flex items-center justify-center transition border border-gray-800 active:scale-95"
+                  title="Diminuir limite (-1)"
+                >
+                  -
+                </button>
+                <button 
+                  data-action="inc-limit" 
+                  data-rarity="${rarityKey}" 
+                  data-id="${clan.id}" 
+                  class="w-6 h-6 rounded bg-gray-900 hover:bg-gray-800 text-gray-400 font-bold flex items-center justify-center transition border border-gray-800 active:scale-95"
+                  title="Aumentar limite (+1)"
+                >
+                  +
+                </button>
+                <button 
+                  data-action="toggle-unlimited" 
+                  data-rarity="${rarityKey}" 
+                  data-id="${clan.id}" 
+                  class="px-1.5 py-0.5 rounded text-[10px] ${isUnlimited ? 'bg-purple-900 text-purple-200 font-bold' : 'bg-gray-800 text-gray-400'} hover:bg-purple-800 transition border border-gray-700"
+                  title="Alternar vagas ilimitadas (?)"
+                >
+                  ??
+                </button>
+              </div>
+
+            </div>
+          `;
+
+          container.appendChild(card);
+        });
+      });
+
+      // Update counters
+      document.getElementById('totalClansCount').textContent = totalClans;
+      document.getElementById('totalFullClansCount').textContent = totalFull;
+
+      // Attach event delegation for buttons
+      container.onclick = (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        const rarity = btn.dataset.rarity;
+        const id = btn.dataset.id;
+        const clan = clansState[rarity]?.find(c => c.id === id);
+        if (!clan) return;
+
+        if (action === 'inc-occupied') {
+          clan.occupied += 1;
+        } else if (action === 'dec-occupied') {
+          if (clan.occupied > 0) clan.occupied -= 1;
+        } else if (action === 'inc-limit') {
+          if (clan.limit === '??') clan.limit = 10;
+          else clan.limit += 1;
+        } else if (action === 'dec-limit') {
+          if (clan.limit === '??') clan.limit = 5;
+          else if (clan.limit > 1) clan.limit -= 1;
+        } else if (action === 'toggle-unlimited') {
+          clan.limit = clan.limit === '??' ? 10 : '??';
+        }
+
+        saveClansState();
+      };
+    }
+
+    // --- 12. RARITY ODDS MODAL (STAFF CUSTOMIZER) ---
+
+    function renderOddsEditor() {
+      const container = document.getElementById('oddsInputsContainer');
+      container.innerHTML = '';
+
+      rarityOddsState.forEach((item, index) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between gap-3 p-2 bg-gray-900 rounded-lg border border-gray-800';
+        row.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="w-3.5 h-3.5 rounded-full" style="background-color: ${item.color};"></span>
+            <span class="text-xs font-bold text-gray-200">${item.name}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input 
+              type="number" 
+              min="0" 
+              max="100" 
+              step="1"
+              value="${item.percent}" 
+              data-index="${index}"
+              class="odds-input w-20 px-2 py-1 bg-gray-950 border border-gray-700 rounded text-right text-xs text-white font-bold focus:outline-none focus:border-purple-500"
+            >
+            <span class="text-xs text-gray-400 font-bold">%</span>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      updateOddsSumDisplay();
+
+      // Listen for input changes
+      container.oninput = () => {
+        updateOddsSumDisplay();
+      };
+    }
+
+    function updateOddsSumDisplay() {
+      const inputs = document.querySelectorAll('.odds-input');
+      let sum = 0;
+      inputs.forEach(input => {
+        sum += parseFloat(input.value) || 0;
+      });
+
+      const badge = document.getElementById('oddsTotalSumBadge');
+      badge.textContent = `${sum}%`;
+      if (sum === 100) {
+        badge.className = 'text-green-400 text-sm font-black';
+      } else {
+        badge.className = 'text-red-400 text-sm font-black animate-pulse';
+      }
+    }
+
+    function saveOddsFromInputs() {
+      const inputs = document.querySelectorAll('.odds-input');
+      inputs.forEach((input, index) => {
+        const val = Math.max(0, parseFloat(input.value) || 0);
+        rarityOddsState[index].percent = val;
+      });
+
+      saveOddsState();
+      document.getElementById('oddsModal').classList.add('hidden');
+      showToast('✅ Probabilidades salvas e aplicadas na roleta!');
+    }
+
+    function normalizeOdds() {
+      const inputs = document.querySelectorAll('.odds-input');
+      let sum = 0;
+      inputs.forEach(input => sum += (parseFloat(input.value) || 0));
+      if (sum <= 0) return;
+
+      inputs.forEach(input => {
+        const current = parseFloat(input.value) || 0;
+        const normalized = Math.round((current / sum) * 100);
+        input.value = normalized;
+      });
+      updateOddsSumDisplay();
+    }
+
+    // --- 13. SESSION HISTORY LIST ---
+
+    function renderHistoryList() {
+      const container = document.getElementById('historyListContainer');
+      const badge = document.getElementById('historyCountBadge');
+      badge.textContent = sessionHistory.length;
+      container.innerHTML = '';
+
+      if (sessionHistory.length === 0) {
+        container.innerHTML = `
+          <div class="p-6 text-center text-xs text-gray-500 italic">
+            Nenhum sorteio registrado nesta sessão.
+          </div>
+        `;
+        return;
+      }
+
+      sessionHistory.forEach(record => {
+        const card = document.createElement('div');
+        card.className = 'p-2.5 rounded-xl bg-tsukuyomi-cardLight border border-gray-800 text-xs flex flex-col gap-1 hover:border-gray-700 transition';
+        card.innerHTML = `
+          <div class="flex items-center justify-between text-[10px] text-gray-400">
+            <span class="font-mono text-red-400/90 font-bold">${record.securityHash}</span>
+            <span>${record.timestamp.split(' às ')[1] || record.timestamp}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <strong class="text-white text-sm font-bold truncate">${record.itemName}</strong>
+            <span class="text-[10px] bg-red-950/60 border border-red-800/40 text-red-300 px-1.5 py-0.5 rounded">
+              ${record.category}
+            </span>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-gray-400 pt-1 border-t border-gray-800/50">
+            <span class="truncate"><i class="fa-solid fa-user-ninja mr-1 text-gray-500"></i>${record.nick}</span>
+            <button class="text-red-400 hover:text-white font-semibold text-[10px] re-view-btn">
+              Ver Print
+            </button>
+          </div>
+        `;
+
+        card.querySelector('.re-view-btn').onclick = () => {
+          lastWinnerData = record;
+          openResultModal(record);
+        };
+
+        container.appendChild(card);
+      });
+    }
+
+    // --- 14. TOAST NOTIFICATIONS ---
+
+    function showToast(message) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'px-4 py-2.5 bg-gray-900 border border-red-700 text-gray-100 text-xs font-semibold rounded-xl shadow-blood-glow flex items-center gap-2 transform transition-all duration-300 translate-y-4 opacity-0 pointer-events-auto';
+      toast.innerHTML = `
+        <i class="fa-solid fa-bell text-red-400"></i>
+        <span>${message}</span>
+      `;
+
+      container.appendChild(toast);
+
+      // Animate in
+      setTimeout(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+      }, 20);
+
+      // Dismiss after 3.2s
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+
+    // --- 15. INITIALIZATION & DOM EVENT BINDINGS ---
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAppState();
+      initAmbienceParticles();
+      renderCategoryTabs();
+      updateWheelPool();
+      renderClanLimitsManager();
+      renderHistoryList();
+
+      // Spin Button
+      document.getElementById('spinBtn').onclick = triggerSpin;
+      canvas.onclick = triggerSpin;
+
+      // Spacebar to spin
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && e.target.tagName !== 'INPUT' && !isSpinning) {
+          e.preventDefault();
+          triggerSpin();
+        }
+        if (e.code === 'Escape') {
+          closeResultModal();
+          document.getElementById('oddsModal').classList.add('hidden');
+        }
+      });
+
+      // Quick Spin Toggle
+      const quickBtn = document.getElementById('quickSpinToggle');
+      quickBtn.onclick = () => {
+        isQuickSpin = !isQuickSpin;
+        document.getElementById('quickSpinText').textContent = isQuickSpin ? 'Giro Rápido' : 'Giro Normal';
+        document.getElementById('quickSpinIcon').className = isQuickSpin ? 'fa-solid fa-bolt text-red-400' : 'fa-solid fa-bolt text-yellow-400';
+        showToast(isQuickSpin ? '⚡ Modo Giro Rápido Ativado' : '🔄 Modo Giro Normal Ativado');
+      };
+
+      // Sound Mute Toggle
+      const audioBtn = document.getElementById('audioToggleBtn');
+      audioBtn.onclick = () => {
+        soundEnabled = !soundEnabled;
+        const icon = document.getElementById('audioIcon');
+        if (soundEnabled) {
+          icon.className = 'fa-solid fa-volume-high text-red-500';
+          showToast('🔊 Efeitos Sonoros Ativados');
+        } else {
+          icon.className = 'fa-solid fa-volume-xmark text-gray-500';
+          showToast('🔇 Efeitos Sonoros Mutados');
+        }
+      };
+
+      // Clear Nick Button
+      document.getElementById('clearNickBtn').onclick = () => {
+        document.getElementById('playerNickInput').value = '';
+        document.getElementById('playerNickInput').focus();
+      };
+
+      // Ignore Limits Checkbox
+      const ignoreBox = document.getElementById('ignoreLimitsCheckbox');
+      ignoreBox.onchange = (e) => {
+        ignoreLimits = e.target.checked;
+        updateWheelPool();
+        showToast(ignoreLimits ? '⚠️ Roleta agora inclui clãs lotados!' : '🔒 Clãs lotados bloqueados na roleta.');
+      };
+
+      // Clan Search & Rarity Filter
+      document.getElementById('clanSearchInput').oninput = renderClanLimitsManager;
+      document.getElementById('clanRarityFilter').onchange = renderClanLimitsManager;
+
+      // Reset Clan Limits to Factory Defaults
+      document.getElementById('resetClanLimitsBtn').onclick = () => {
+        if (confirm('Deseja restaurar as vagas e limites para os valores padrão do servidor?')) {
+          clansState = JSON.parse(JSON.stringify(DEFAULT_CLANS));
+          saveClansState();
+          showToast('🔄 Limites de fábrica restaurados!');
+        }
+      };
+
+      // Side Tabs (Vagas Clãs vs Histórico)
+      const tabLimitsBtn = document.getElementById('sideTabLimitsBtn');
+      const tabHistoryBtn = document.getElementById('sideTabHistoryBtn');
+      const contentLimits = document.getElementById('sideTabLimitsContent');
+      const contentHistory = document.getElementById('sideTabHistoryContent');
+
+      function switchSideTab(tab) {
+        if (tab === 'limits') {
+          tabLimitsBtn.className = 'flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-red-950/80 text-red-200 border border-red-700/80 shadow';
+          tabHistoryBtn.className = 'flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-gray-900/60 text-gray-400 border border-gray-800 hover:text-gray-200';
+          contentLimits.classList.remove('hidden');
+          contentHistory.classList.add('hidden');
+        } else {
+          tabHistoryBtn.className = 'flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-red-950/80 text-red-200 border border-red-700/80 shadow';
+          tabLimitsBtn.className = 'flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-gray-900/60 text-gray-400 border border-gray-800 hover:text-gray-200';
+          contentHistory.classList.remove('hidden');
+          contentLimits.classList.add('hidden');
+        }
+      }
+
+      tabLimitsBtn.onclick = () => switchSideTab('limits');
+      tabHistoryBtn.onclick = () => switchSideTab('history');
+      document.getElementById('viewFullHistoryBtn').onclick = () => switchSideTab('history');
+
+      // Clear Session History
+      document.getElementById('clearHistoryBtn').onclick = () => {
+        if (confirm('Deseja limpar todo o histórico de sorteios desta sessão?')) {
+          sessionHistory = [];
+          saveHistoryState();
+          showToast('🗑️ Histórico limpo.');
+        }
+      };
+
+      // Mobile button scrolls to side panel
+      document.getElementById('mobileLimitsBtn').onclick = () => {
+        contentLimits.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      // Modal Buttons
+      document.getElementById('closeResultModalBtn').onclick = closeResultModal;
+      document.getElementById('spinAgainBtn').onclick = () => {
+        closeResultModal();
+        triggerSpin();
+      };
+      document.getElementById('downloadScreenshotBtn').onclick = downloadCertificateScreenshot;
+      document.getElementById('copyScreenshotBtn').onclick = copyCertificateToClipboard;
+
+      // Odds Customizer Modal
+      const oddsModal = document.getElementById('oddsModal');
+      document.getElementById('editOddsQuickBtn').onclick = () => {
+        renderOddsEditor();
+        oddsModal.classList.remove('hidden');
+      };
+      document.getElementById('closeOddsModalBtn').onclick = () => oddsModal.classList.add('hidden');
+      document.getElementById('saveOddsBtn').onclick = saveOddsFromInputs;
+      document.getElementById('normalizeOddsBtn').onclick = normalizeOdds;
+      document.getElementById('resetOddsDefaultsBtn').onclick = () => {
+        rarityOddsState = JSON.parse(JSON.stringify(DEFAULT_RARITY_ODDS));
+        renderOddsEditor();
+      };
+
+      // Initial redraw after fonts load
+      if (document.fonts) {
+        document.fonts.ready.then(() => {
+          drawRouletteWheel();
+        });
+      }
+    });
+  </script>
+</body>
+</html>
